@@ -7,6 +7,7 @@ setup(
     install_requires=[
         "web3",
         "smart-open",
+        "retry",
     ],
     extras_require={
         "dev": [

@@ -43,7 +43,7 @@ fetch_block_timestamps_parser.add_argument(
 
 fetch_address_transactions_parser = subparsers.add_parser(
     "fetch-address-transactions",
-    help="fetches information about the transactions of a given address")
+    help="fetches information about the transactions of a given address from Etherscan")
 add_etherscan_api_key(fetch_address_transactions_parser)
 fetch_address_transactions_parser.add_argument(
     "-a", "--address", required=True, help="address for which to get transactions")
@@ -51,6 +51,21 @@ fetch_address_transactions_parser.add_argument(
     "--internal", default=False, action="store_true",
     help="fetch information about internal transactions rather than regular ones")
 fetch_address_transactions_parser.add_argument(
+    "-o", "--output", required=True, help="output file")
+
+fetch_transactions_parser = subparsers.add_parser(
+    "fetch-transactions",
+    help="fetches transactions in given files from an Ethereum node")
+add_web3_uri(fetch_transactions_parser)
+fetch_transactions_parser.add_argument(
+    "files", nargs="+", help="files containing transactions to trace")
+fetch_transactions_parser.add_argument(
+    "-r", "--include-receipt", action="store_true", default=False,
+    help="include transaction receipt")
+fetch_transactions_parser.add_argument(
+    "-t", "--include-traces", action="store_true", default=False,
+    help="include transaction traces")
+fetch_transactions_parser.add_argument(
     "-o", "--output", required=True, help="output file")
 
 

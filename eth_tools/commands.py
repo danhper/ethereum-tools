@@ -1,5 +1,6 @@
 import csv
 from functools import wraps
+import json
 
 from smart_open import open as smart_open
 from web3 import Web3
@@ -7,7 +8,11 @@ from web3.providers.auto import load_provider_from_uri
 
 from eth_tools import constants
 from eth_tools.block_iterator import BlockIterator
+from eth_tools.json_encoder import EthJSONEncoder
 from eth_tools.transaction_fetcher import TransactionsFetcher
+from eth_tools.transaction_tracer import TransactionTracer
+from eth_tools.logger import logger
+
 
 
 def uses_web3(f):
@@ -26,13 +31,13 @@ def uses_etherscan(f):
     return wrapper
 
 
-def create_web3(uri):
-    provider = load_provider_from_uri(uri)
+def create_web3(uri: str):
+    provider = load_provider_from_uri(uri, {"timeout": 60})
     return Web3(provider=provider)
 
 
 @uses_web3
-def fetch_blocks(args, web3):
+def fetch_blocks(args: dict, web3: Web3):
     """Fetches blocks and stores them in the file given in arguments"""
     block_iterator = BlockIterator(web3, args["start_block"], args["end_block"],
                                    log_interval=args["log_interval"])
@@ -46,7 +51,7 @@ def fetch_blocks(args, web3):
 
 
 @uses_etherscan
-def fetch_address_transactions(args, etherscan_key):
+def fetch_address_transactions(args: dict, etherscan_key: Web3):
     fetcher = TransactionsFetcher(etherscan_api_key=etherscan_key)
     internal = args["internal"]
     if internal:
@@ -58,3 +63,33 @@ def fetch_address_transactions(args, etherscan_key):
         writer.writeheader()
         for transaction in fetcher.fetch_contract_transactions(args["address"], internal=internal):
             writer.writerow(transaction)
+
+
+@uses_web3
+def fetch_transactions(args: dict, web3: Web3):
+    tx_hashes = []
+    for filename in args["files"]:
+        with smart_open(filename) as fin:
+            for tx in csv.DictReader(fin):
+                tx_hashes.append(tx["hash"])
+
+    tx_tracer = TransactionTracer(web3)
+    done = set()
+    with smart_open(args["output"], "w") as fout:
+        for i, tx_hash in enumerate(tx_hashes):
+            if i % 10 == 0:
+                logger.info("progress: %s/%s", i, len(tx_hashes))
+            if tx_hash in done:
+                continue
+            try:
+                tx = dict(web3.eth.getTransaction(tx_hash))
+                if args["include_receipt"]:
+                    tx["receipt"] = web3.eth.getTransactionReceipt(tx_hash)
+                if args["include_traces"]:
+                    tx["traces"] = tx_tracer.trace_transaction(tx_hash)
+                json.dump(tx, fout, cls=EthJSONEncoder)
+                print(file=fout)
+                done.add(tx_hash)
+            except Exception as ex: # pylint: disable=broad-except
+                logger.warning("failed to trace %s: %s", tx_hash, ex)
+                continue
