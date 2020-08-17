@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 
 from eth_tools import commands
 from eth_tools import constants
+from eth_tools.contract_caller import DEFAULT_BLOCK_INTERVAL
 
 
 
@@ -66,6 +67,26 @@ fetch_transactions_parser.add_argument(
     "-t", "--include-traces", action="store_true", default=False,
     help="include transaction traces")
 fetch_transactions_parser.add_argument(
+    "-o", "--output", required=True, help="output file")
+
+call_contract_parser = subparsers.add_parser(
+    "call-contract",
+    help="call contract regularly between blocks")
+add_web3_uri(call_contract_parser)
+call_contract_parser.add_argument(
+    "--abi", help="path to the contract abi")
+call_contract_parser.add_argument(
+    "-a", "--address", help="address of the contract")
+call_contract_parser.add_argument(
+    "-s", "--start", type=int, required=True,
+    help="start block")
+call_contract_parser.add_argument(
+    "-e", "--end", type=int,
+    help="end block")
+call_contract_parser.add_argument(
+    "-i", "--interval", type=int, default=DEFAULT_BLOCK_INTERVAL,
+    help="interval between calls")
+call_contract_parser.add_argument(
     "-o", "--output", required=True, help="output file")
 
 

@@ -8,6 +8,7 @@ from web3.providers.auto import load_provider_from_uri
 
 from eth_tools import constants
 from eth_tools.block_iterator import BlockIterator
+from eth_tools.contract_caller import ContractCaller
 from eth_tools.json_encoder import EthJSONEncoder
 from eth_tools.transaction_fetcher import TransactionsFetcher
 from eth_tools.transaction_tracer import TransactionTracer
@@ -93,3 +94,18 @@ def fetch_transactions(args: dict, web3: Web3):
             except Exception as ex: # pylint: disable=broad-except
                 logger.warning("failed to trace %s: %s", tx_hash, ex)
                 continue
+
+@uses_web3
+def call_contract(args: dict, web3: Web3):
+    with open(args["abi"]) as f:
+        abi = json.load(f)
+    contract = web3.eth.contract(abi=abi, address=args["address"])
+    contract_caller = ContractCaller(contract)
+    with smart_open(args["output"], "w") as fout:
+        results = contract_caller.collect_results(
+            args["func"], args["start"],
+            args["end"], block_interval=args["interval"])
+        for block, result in results:
+            line = {"block": block, "result": result}
+            json.dump(line, fout, cls=EthJSONEncoder)
+            print(file=fout)
