@@ -31,7 +31,7 @@ class ContractCaller:
             results = executor.map(run_task, blocks)
             for i, (block, result) in enumerate(zip(blocks, results)):
                 if i % 10 == 0:
-                    logger.info("progress: %s/%s (%.2f%%)", i, total_count, i / total_count)
+                    logger.info("progress: %s/%s (%.2f%%)", i, total_count, i / total_count * 100)
                 if result:
                     yield (block, result)
 
