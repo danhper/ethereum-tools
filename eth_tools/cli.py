@@ -74,9 +74,9 @@ call_contract_parser = subparsers.add_parser(
     help="call contract regularly between blocks")
 add_web3_uri(call_contract_parser)
 call_contract_parser.add_argument(
-    "--abi", help="path to the contract abi")
+    "address", help="address of the contract")
 call_contract_parser.add_argument(
-    "-a", "--address", help="address of the contract")
+    "--abi", help="path to the contract abi")
 call_contract_parser.add_argument(
     "-s", "--start", type=int, required=True,
     help="start block")
@@ -86,6 +86,10 @@ call_contract_parser.add_argument(
 call_contract_parser.add_argument(
     "-i", "--interval", type=int, default=DEFAULT_BLOCK_INTERVAL,
     help="interval between calls")
+call_contract_parser.add_argument(
+    "-f", "--func", required=True, help="function to call")
+call_contract_parser.add_argument(
+    "--args", nargs="*", help="arguments to pass to the function")
 call_contract_parser.add_argument(
     "-o", "--output", required=True, help="output file")
 

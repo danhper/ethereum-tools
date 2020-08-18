@@ -99,12 +99,13 @@ def fetch_transactions(args: dict, web3: Web3):
 def call_contract(args: dict, web3: Web3):
     with open(args["abi"]) as f:
         abi = json.load(f)
-    contract = web3.eth.contract(abi=abi, address=args["address"])
+    address = web3.toChecksumAddress(args["address"])
+    contract = web3.eth.contract(abi=abi, address=address)
     contract_caller = ContractCaller(contract)
     with smart_open(args["output"], "w") as fout:
         results = contract_caller.collect_results(
-            args["func"], args["start"],
-            args["end"], block_interval=args["interval"])
+            args["func"], start_block=args["start"],
+            end_block=args["end"], block_interval=args["interval"])
         for block, result in results:
             line = {"block": block, "result": result}
             json.dump(line, fout, cls=EthJSONEncoder)
