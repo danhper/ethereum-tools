@@ -1,6 +1,8 @@
 import csv
 from functools import wraps
 import json
+import sys
+from contextlib import contextmanager
 
 from smart_open import open as smart_open
 from web3 import Web3
@@ -102,7 +104,7 @@ def call_contract(args: dict, web3: Web3):
     address = web3.toChecksumAddress(args["address"])
     contract = web3.eth.contract(abi=abi, address=address)
     contract_caller = ContractCaller(contract)
-    with smart_open(args["output"], "w") as fout:
+    with smart_open_with_stdout(args["output"], "w") as fout:
         results = contract_caller.collect_results(
             args["func"], start_block=args["start"],
             end_block=args["end"], block_interval=args["interval"])
@@ -110,3 +112,12 @@ def call_contract(args: dict, web3: Web3):
             line = {"block": block, "result": result}
             json.dump(line, fout, cls=EthJSONEncoder)
             print(file=fout)
+
+
+@contextmanager
+def smart_open_with_stdout(filename, mode="r", **kwargs):
+    if filename is None:
+        yield sys.stdout
+    else:
+        with smart_open(filename, mode, **kwargs) as f:
+            yield f

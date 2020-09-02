@@ -18,6 +18,8 @@ class ContractCaller:
         max_workers = multiprocessing.cpu_count() * 5
         if end_block is None:
             end_block = self.contract.web3.eth.blockNumber
+        if start_block is None:
+            start_block = end_block
 
         def run_task(block):
             try:
@@ -30,7 +32,7 @@ class ContractCaller:
             total_count = len(blocks)
             results = executor.map(run_task, blocks)
             for i, (block, result) in enumerate(zip(blocks, results)):
-                if i % 10 == 0:
+                if i % 10 == 0 and total_count > 10:
                     logger.info("progress: %s/%s (%.2f%%)", i, total_count, i / total_count * 100)
                 if result:
                     yield (block, result)

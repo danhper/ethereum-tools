@@ -78,7 +78,7 @@ call_contract_parser.add_argument(
 call_contract_parser.add_argument(
     "--abi", help="path to the contract abi")
 call_contract_parser.add_argument(
-    "-s", "--start", type=int, required=True,
+    "-s", "--start", type=int,
     help="start block")
 call_contract_parser.add_argument(
     "-e", "--end", type=int,
@@ -91,7 +91,7 @@ call_contract_parser.add_argument(
 call_contract_parser.add_argument(
     "--args", nargs="*", help="arguments to pass to the function")
 call_contract_parser.add_argument(
-    "-o", "--output", required=True, help="output file")
+    "-o", "--output", help="output file")
 
 
 def run():
