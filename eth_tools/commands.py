@@ -105,9 +105,11 @@ def call_contract(args: dict, web3: Web3):
     contract = web3.eth.contract(abi=abi, address=address)
     contract_caller = ContractCaller(contract)
     with smart_open_with_stdout(args["output"], "w") as fout:
+        # print(args["args"])
         results = contract_caller.collect_results(
             args["func"], start_block=args["start"],
-            end_block=args["end"], block_interval=args["interval"])
+            end_block=args["end"], block_interval=args["interval"],
+            contract_args=args["args"])
         for block, result in results:
             line = {"block": block, "result": result}
             json.dump(line, fout, cls=EthJSONEncoder)

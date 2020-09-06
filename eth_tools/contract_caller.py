@@ -9,21 +9,31 @@ from eth_tools.logger import logger
 DEFAULT_BLOCK_INTERVAL = 1_000
 
 
+ARG_TYPES = {
+    "u256": int,
+    "address": str,
+}
+
+
 class ContractCaller:
     def __init__(self, contract: Contract):
         self.contract = contract
 
-    def collect_results(self, func_name, start_block, *args,
-                        end_block=None, block_interval=DEFAULT_BLOCK_INTERVAL, **kwargs):
+    def collect_results(self, func_name, start_block,
+                        end_block=None, block_interval=DEFAULT_BLOCK_INTERVAL,
+                        contract_args=None):
         max_workers = multiprocessing.cpu_count() * 5
         if end_block is None:
             end_block = self.contract.web3.eth.blockNumber
         if start_block is None:
             start_block = end_block
+        if contract_args is None:
+            contract_args = []
+        contract_args = [self.transform_arg(arg) for arg in contract_args]
 
         def run_task(block):
             try:
-                return self.call_func(func_name, block, *args, **kwargs)
+                return self.call_func(func_name, block, contract_args)
             except Exception as ex: # pylint: disable=broad-except
                 logger.error("failed to fetch block %s: %s", block, ex)
 
@@ -38,6 +48,16 @@ class ContractCaller:
                     yield (block, result)
 
     @retry(delay=1, backoff=2, tries=3, logger=logger)
-    def call_func(self, func_name, block, *args, **kwargs):
+    def call_func(self, func_name, block, contract_args):
         func = getattr(self.contract.functions, func_name)
-        return func(*args, **kwargs).call(block_identifier=block)
+        return func(*contract_args).call(block_identifier=block)
+
+    def transform_arg(self, raw_arg: str):
+        args = raw_arg.split(":")
+        if len(args) == 1:
+            return args[0]
+        arg, arg_type = args
+        cast = ARG_TYPES.get(arg_type)
+        if not cast:
+            raise ValueError(f"unknown type {arg_type}")
+        return cast(arg)
