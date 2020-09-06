@@ -34,7 +34,7 @@ class ContractCaller:
             for i, (block, result) in enumerate(zip(blocks, results)):
                 if i % 10 == 0 and total_count > 10:
                     logger.info("progress: %s/%s (%.2f%%)", i, total_count, i / total_count * 100)
-                if result:
+                if result is not None:
                     yield (block, result)
 
     @retry(delay=1, backoff=2, tries=3, logger=logger)
