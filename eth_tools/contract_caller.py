@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
 
+from web3 import Web3
 from web3.contract import Contract
 from retry import retry
 
@@ -11,7 +12,7 @@ DEFAULT_BLOCK_INTERVAL = 1_000
 
 ARG_TYPES = {
     "u256": int,
-    "address": str,
+    "address": Web3.toChecksumAddress,
 }
 
 
