@@ -1,21 +1,24 @@
+from codecs import StreamReader, StreamWriter
 import csv
-from functools import wraps
+from eth_tools.event_fetcher import EventFetcher, FetchTask
 import json
 import sys
 from contextlib import contextmanager
+from functools import wraps
+from typing import IO, Iterator, cast
 
-from smart_open import open as smart_open
+from eth_typing import Address
 from web3 import Web3
 from web3.providers.auto import load_provider_from_uri
 
 from eth_tools import constants
+from eth_tools.utils import smart_open
 from eth_tools.block_iterator import BlockIterator
 from eth_tools.contract_caller import ContractCaller
 from eth_tools.json_encoder import EthJSONEncoder
+from eth_tools.logger import logger
 from eth_tools.transaction_fetcher import TransactionsFetcher
 from eth_tools.transaction_tracer import TransactionTracer
-from eth_tools.logger import logger
-
 
 
 def uses_web3(f):
@@ -23,6 +26,7 @@ def uses_web3(f):
     def wrapper(args):
         web3 = create_web3(args["web3_uri"])
         return f(args, web3)
+
     return wrapper
 
 
@@ -31,6 +35,7 @@ def uses_etherscan(f):
     def wrapper(args):
         etherscan_key = args["etherscan_api_key"]
         return f(args, etherscan_key)
+
     return wrapper
 
 
@@ -42,8 +47,9 @@ def create_web3(uri: str):
 @uses_web3
 def fetch_blocks(args: dict, web3: Web3):
     """Fetches blocks and stores them in the file given in arguments"""
-    block_iterator = BlockIterator(web3, args["start_block"], args["end_block"],
-                                   log_interval=args["log_interval"])
+    block_iterator = BlockIterator(
+        web3, args["start_block"], args["end_block"], log_interval=args["log_interval"]
+    )
     fields = args["fields"]
     with smart_open(args["output"], "w") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
@@ -64,7 +70,9 @@ def fetch_address_transactions(args: dict, etherscan_key: Web3):
     with smart_open(args["output"], "w") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader()
-        for transaction in fetcher.fetch_contract_transactions(args["address"], internal=internal):
+        for transaction in fetcher.fetch_contract_transactions(
+            args["address"], internal=internal
+        ):
             writer.writerow(transaction)
 
 
@@ -93,31 +101,51 @@ def fetch_transactions(args: dict, web3: Web3):
                 json.dump(tx, fout, cls=EthJSONEncoder)
                 print(file=fout)
                 done.add(tx_hash)
-            except Exception as ex: # pylint: disable=broad-except
+            except Exception as ex:  # pylint: disable=broad-except
                 logger.warning("failed to trace %s: %s", tx_hash, ex)
                 continue
+
 
 @uses_web3
 def call_contract(args: dict, web3: Web3):
     with open(args["abi"]) as f:
         abi = json.load(f)
-    address = web3.toChecksumAddress(args["address"])
+    address: Address = web3.toChecksumAddress(args["address"])
     contract = web3.eth.contract(abi=abi, address=address)
     contract_caller = ContractCaller(contract)
     with smart_open_with_stdout(args["output"], "w") as fout:
         # print(args["args"])
         results = contract_caller.collect_results(
-            args["func"], start_block=args["start"],
-            end_block=args["end"], block_interval=args["interval"],
-            contract_args=args["args"])
+            args["func"],
+            start_block=args["start"],
+            end_block=args["end"],
+            block_interval=args["interval"],
+            contract_args=args["args"],
+        )
         for block, result in results:
             line = {"block": block, "result": result}
             json.dump(line, fout, cls=EthJSONEncoder)
             print(file=fout)
 
 
+@uses_web3
+def fetch_events(args: dict, web3: Web3):
+    fetcher = EventFetcher(web3)
+    task = FetchTask.from_dict(args)
+    fetcher.fetch_and_persist_events(task, args["output"])
+
+
+@uses_web3
+def bulk_fetch_events(args: dict, web3: Web3):
+    fetcher = EventFetcher(web3)
+    with smart_open(args["config"]) as f:
+        raw_tasks = json.load(f)
+    tasks = [FetchTask.from_dict(raw_task, args["abis"]) for raw_task in raw_tasks]
+    fetcher.fetch_all_events(tasks, args["output"])
+
+
 @contextmanager
-def smart_open_with_stdout(filename, mode="r", **kwargs):
+def smart_open_with_stdout(filename, mode="r", **kwargs) -> Iterator[IO]:
     if filename is None:
         yield sys.stdout
     else:
