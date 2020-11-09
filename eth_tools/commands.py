@@ -1,24 +1,23 @@
-from codecs import StreamReader, StreamWriter
 import csv
-from eth_tools.event_fetcher import EventFetcher, FetchTask
 import json
 import sys
 from contextlib import contextmanager
 from functools import wraps
-from typing import IO, Iterator, cast
+from typing import IO, Iterator
 
 from eth_typing import Address
 from web3 import Web3
 from web3.providers.auto import load_provider_from_uri
 
 from eth_tools import constants
-from eth_tools.utils import smart_open
 from eth_tools.block_iterator import BlockIterator
 from eth_tools.contract_caller import ContractCaller
+from eth_tools.event_fetcher import EventFetcher, FetchTask
 from eth_tools.json_encoder import EthJSONEncoder
 from eth_tools.logger import logger
 from eth_tools.transaction_fetcher import TransactionsFetcher
 from eth_tools.transaction_tracer import TransactionTracer
+from eth_tools.utils import smart_open
 
 
 def uses_web3(f):
