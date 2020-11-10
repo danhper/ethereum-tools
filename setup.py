@@ -2,8 +2,17 @@ from setuptools import setup, find_packages
 
 
 setup(
-    name="eth-tools",
+    name="ethereum-tools",
+    version="0.1.0",
     packages=find_packages(exclude="tests"),
+    description="High-level tools and library to interact with Ethereum",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
+    author="Daniel Perez",
+    author_email="daniel@perez.sh",
+    url="https://github.com/danhper/ethereum-tools",
+    download_url="https://github.com/danhper/ethereum-tools/archive/master.zip",
+    license="MIT",
     install_requires=[
         "web3",
         "smart-open",
@@ -12,8 +21,9 @@ setup(
     extras_require={
         "dev": [
             "pylint",
+            "black",
             "pytest",
         ]
     },
-    entry_points={"console_scripts": ["eth-tools=eth_tools.cli:run"]}
+    entry_points={"console_scripts": ["eth-tools=eth_tools.cli:run"]},
 )

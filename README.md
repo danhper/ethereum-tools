@@ -5,7 +5,7 @@ Small library/CLI tool wrapping web3py.
 ## Installation
 
 ```
-pip install git+https://github.com/danhper/ethereum-tools.git
+pip install ethereum-tools
 ```
 
 ## CLI Usage
