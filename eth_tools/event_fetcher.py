@@ -60,8 +60,11 @@ class ContractFetcher:
         self.contract = contract
         contract_events = [event() for event in self.contract.events]  # type: ignore
         self.events_by_topic = {
-            event.build_filter().topics[0]: event for event in contract_events
+            event.build_filter().topics[0]: event
+            for event in contract_events
+            if not event.abi["anonymous"]
         }
+
 
     def process_logs(self, events: List[LogReceipt]) -> List[LogReceipt]:
         results = []
