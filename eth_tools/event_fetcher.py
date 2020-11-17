@@ -65,15 +65,14 @@ class ContractFetcher:
             if not event.abi["anonymous"]
         }
 
+    def process_log(self, event: LogReceipt) -> LogReceipt:
+        topics = event.get("topics")
+        if topics and topics[0].hex() in self.events_by_topic:
+            event = self.events_by_topic[topics[0].hex()].processLog(event)
+        return event
 
     def process_logs(self, events: List[LogReceipt]) -> List[LogReceipt]:
-        results = []
-        for event in events:
-            topics = event.get("topics")
-            if topics and topics[0].hex() in self.events_by_topic:
-                event = self.events_by_topic[topics[0].hex()].processLog(event)
-            results.append(event)
-        return results
+        return [self.process_log(event) for event in events]
 
     def _fetch_events(self, start_block: int, end_block: int) -> Iterable[LogReceipt]:
         event_filter = self.contract.web3.eth.filter(
