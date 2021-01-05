@@ -27,6 +27,16 @@ def events():
     return events
 
 
+@pytest.fixture
+def dummy_balances():
+    return {"0x123": {2: 10, 3: 11, 5: 18}}
+
+
+@pytest.fixture
+def dummy_addresses():
+    return {"addr": "0x123"}
+
+
 def test_handle_transfer_event(addresses):
     transfer_event_parser = TransferEventParser(addresses)
     transfer_event_parser.set_quantity_key(mock_event)
@@ -40,3 +50,18 @@ def test_parse_events(addresses, events):
     assert transfer_event_parser.balances[
         "0x0001FB050Fe7312791bF6475b96569D83F695C9f"][10478649] == 9995796750644777900207
     assert transfer_event_parser.balances["0x28b88cfD875C883cDb61938C97B8d1baabf31c88"][10478826] == 90896908769421890
+
+
+def test_write_balances(dummy_addresses, dummy_balances, tmp_path):
+    transfer_event_parser = TransferEventParser(dummy_addresses)
+    transfer_event_parser.balances = dummy_balances
+    transfer_event_parser.start = 2
+    transfer_event_parser.write_balances("tok", filepath=str(tmp_path) + "/")
+    output_path = tmp_path / "tok-balances:addr.csv"
+    assert os.path.exists(output_path)
+    with open(output_path) as f:
+        print(f.read())
+    with open(output_path) as f:
+        balances = [json.loads(line) for line in f]
+    assert balances == [{"blockNumber": 2, "balance": 10}, {"blockNumber": 3, "balance": 11}, {
+        "blockNumber": 4, "balance": 11}, {"blockNumber": 5, "balance": 18}]

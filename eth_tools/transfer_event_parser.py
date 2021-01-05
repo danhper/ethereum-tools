@@ -80,11 +80,10 @@ class TransferEventParser:
                             self.log_balance(
                                 counter, fname, block_number, last_balance)
                         block_number += 1
-                if block == last_block + 1:
-                    counter += 1
-                    if counter % inter == 0:
-                        self.log_balance(
-                            counter, fname, block, self.balances[address][block])
+                counter += 1
+                if counter % inter == 0:
+                    self.log_balance(
+                        counter, fname, block, self.balances[address][block])
                 last_balance = self.balances[address][block]
                 last_block = block
 
