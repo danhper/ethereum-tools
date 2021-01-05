@@ -192,7 +192,6 @@ get_balances_event_parser.add_argument(
     "-s",
     "--start-block",
     type=int,
-    default=1,
     help="block from which to fetch timestamps",
 )
 get_balances_event_parser.add_argument(

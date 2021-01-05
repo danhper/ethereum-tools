@@ -67,12 +67,11 @@ def get_balances(args: dict):
     """
     with open(args['addresses']) as f:
         addresses = json.load(f)
-    event_parser = TransferEventParser(addresses)
-    # TODO: if events not given then fetch first; start + end + erc20 contract address required
-
-    # parse events file
-    fname = os.path.join(os.path.dirname(__file__),
-                         args["events"])
+    start = args['start_block'] if 'start_block' in args.keys() else None
+    end = args['end_block'] if 'end_block' in args.keys() else None
+    event_parser = TransferEventParser(
+        addresses, start=start, end=end)
+    fname = os.path.join(os.path.dirname(__file__), args["events"])
     with open(args['events']) as f:
         events = [json.loads(e) for e in f]
     event_parser.parse_events(events)
