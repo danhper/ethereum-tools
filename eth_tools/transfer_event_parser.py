@@ -12,7 +12,6 @@ class TransferEventParser:
         self.addresses = addresses
         for key, val in self.addresses.items():
             self.addresses[key] = val.lower()
-        print(self.addresses)
         self.balances = defaultdict(lambda: defaultdict(lambda: 0))
         self.last_update = defaultdict(lambda: 0)
         self.start = start
