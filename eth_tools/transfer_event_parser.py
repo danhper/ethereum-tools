@@ -10,11 +10,17 @@ class TransferEventParser:
 
     def __init__(self, addresses: dict, start: int = None, end: int = None):
         self.addresses = addresses
+        for key, val in self.addresses.items():
+            self.addresses[key] = val.lower()
+        print(self.addresses)
         self.balances = defaultdict(lambda: defaultdict(lambda: 0))
-        self.key = 'amount'
         self.last_update = defaultdict(lambda: 0)
         self.start = start
         self.end = end
+        self.keys = {}
+        self.keys['amount'] = 'amount'
+        self.keys['to'] = 'to'
+        self.keys['from'] = 'from'
 
     def parse_events(self, events: list):
         first_event = True
@@ -30,29 +36,44 @@ class TransferEventParser:
         if event['event'] != 'Transfer':
             logger.warning('Failed to parse non-transfer event')
             return
+        key_to = self.keys['to']
+        key_from = self.keys['from']
+        key_amount = self.keys['amount']
         block = event['blockNumber']
-        if event['args']['from'] in self.addresses.values():
-            self.updateBalance(event['args']['from'],
-                               -1 * event['args'][self.key], block)
-        if event['args']['to'] in self.addresses.values():
-            self.updateBalance(event['args']['to'],
-                               event['args'][self.key], block)
+        if event['args'][key_from].lower() in self.addresses.values():
+            self.update_balance(event['args'][key_from].lower(),
+                                -1 * event['args'][key_amount], block)
+        if event['args'][key_to].lower() in self.addresses.values():
+            self.update_balance(event['args'][key_to].lower(),
+                                event['args'][key_amount], block)
 
-    def updateBalance(self, account: str, change: int, block: int):
+    def update_balance(self, account: str, change: int, block: int):
         last_updated_block = self.last_update[account]
-        self.balances[account][block] = self.balances[account][last_updated_block] + \
-            change
+        self.balances[account][block] = self.balances[account][last_updated_block] + change
         self.last_update[account] = block
 
     def set_quantity_key(self, event: dict) -> bool:
-        """ERC20 contracts don't follow a standard name for the transfer 'amount'.
+        """ERC20 contracts don't follow a standard name for transfer args.
         This should be handled here."""
-        if 'value' in event['args'].keys():
-            self.key = 'value'
-        elif 'amount' in event['args'].keys():
-            self.key = 'amount'
+        keys = event['args'].keys()
+        if '_from' in keys:
+            self.keys['from'] = '_from'
+        elif 'from' not in keys:
+            logger.error('Transfer arg: `from` not found in event parser')
+            return False
+        if '_to' in keys:
+            self.keys['to'] = '_to'
+        elif 'to' not in keys:
+            logger.error(
+                'Transfer arg: `to` not found in event parser')
+            return False
+        if 'value' in keys:
+            self.keys['amount'] = 'value'
+        elif '_value' in keys:
+            self.keys['amount'] = '_value'
         else:
-            logger.error('Key for transfer quantity not found in event parser')
+            logger.error(
+                'Transfer arg: `amount`/`value` not found in event parser')
             return False
         return True
 
