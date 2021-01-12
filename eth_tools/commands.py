@@ -1,6 +1,8 @@
 import csv
 import json
 import sys
+import json
+import os
 from contextlib import contextmanager
 from functools import wraps
 from typing import IO, Iterator
@@ -17,6 +19,7 @@ from eth_tools.json_encoder import EthJSONEncoder
 from eth_tools.logger import logger
 from eth_tools.transaction_fetcher import TransactionsFetcher
 from eth_tools.transaction_tracer import TransactionTracer
+from eth_tools.transfer_event_parser import TransferEventParser
 from eth_tools.utils import smart_open
 
 
@@ -56,6 +59,23 @@ def fetch_blocks(args: dict, web3: Web3):
         for block in block_iterator:
             row = {field: getattr(block, field) for field in fields}
             writer.writerow(row)
+
+
+def get_balances(args: dict):
+    """
+    Parses 'transfer' events of an ERC20 contract to compute balances
+    """
+    with open(args['addresses']) as f:
+        addresses = json.load(f)
+    start = args['start_block'] if 'start_block' in args.keys() else None
+    end = args['end_block'] if 'end_block' in args.keys() else None
+    event_parser = TransferEventParser(
+        addresses, start=start, end=end)
+    with open(args['events']) as f:
+        events = [json.loads(e) for e in f]
+    event_parser.execute_events(events)
+    event_parser.write_balances(
+        args["token"], interval=args["log_interval"], filepath=args["output"])
 
 
 @uses_etherscan
@@ -139,7 +159,8 @@ def bulk_fetch_events(args: dict, web3: Web3):
     fetcher = EventFetcher(web3)
     with smart_open(args["config"]) as f:
         raw_tasks = json.load(f)
-    tasks = [FetchTask.from_dict(raw_task, args["abis"]) for raw_task in raw_tasks]
+    tasks = [FetchTask.from_dict(raw_task, args["abis"])
+             for raw_task in raw_tasks]
     fetcher.fetch_all_events(tasks, args["output"])
 
 

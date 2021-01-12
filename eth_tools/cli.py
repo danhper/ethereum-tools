@@ -109,7 +109,8 @@ call_contract_parser = subparsers.add_parser(
 add_web3_uri(call_contract_parser)
 call_contract_parser.add_argument("address", help="address of the contract")
 call_contract_parser.add_argument("--abi", help="path to the contract abi")
-call_contract_parser.add_argument("-s", "--start", type=int, help="start block")
+call_contract_parser.add_argument(
+    "-s", "--start", type=int, help="start block")
 call_contract_parser.add_argument("-e", "--end", type=int, help="end block")
 call_contract_parser.add_argument(
     "-i",
@@ -157,12 +158,50 @@ add_web3_uri(bulk_fetch_events_parser)
 bulk_fetch_events_parser.add_argument(
     "-c", "--config", help="Config file to fetch events"
 )
-bulk_fetch_events_parser.add_argument("--abis", help="Directory containing ABIs")
+bulk_fetch_events_parser.add_argument(
+    "--abis", help="Directory containing ABIs")
 bulk_fetch_events_parser.add_argument(
     "-o",
     "--output",
     required=True,
     help="Output directory to store the results",
+)
+
+get_balances_event_parser = subparsers.add_parser(
+    "get-balances", help="parses 'transfer' events to compute balances of given addresses"
+)
+get_balances_event_parser.add_argument(
+    "-a",
+    "--addresses",
+    required=True,
+    help="json file containing addresses to get balances for"
+)
+get_balances_event_parser.add_argument(
+    "-t",
+    "--token",
+    required=True,
+    help="token symbol (used for output file name)"
+)
+get_balances_event_parser.add_argument(
+    "-d",
+    "--events",
+    required=True,
+    help="file containing events to parse"
+)
+get_balances_event_parser.add_argument(
+    "-s",
+    "--start-block",
+    type=int,
+    help="block from which to fetch timestamps",
+)
+get_balances_event_parser.add_argument(
+    "-e", "--end-block", type=int, help="block up to which to fetch timestamps"
+)
+get_balances_event_parser.add_argument(
+    "-o", "--output", required=True, help="output file path"
+)
+get_balances_event_parser.add_argument(
+    "--log-interval", type=int, default=1_000, help="interval at which to log"
 )
 
 
