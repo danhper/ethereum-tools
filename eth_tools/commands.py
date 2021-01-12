@@ -71,10 +71,9 @@ def get_balances(args: dict):
     end = args['end_block'] if 'end_block' in args.keys() else None
     event_parser = TransferEventParser(
         addresses, start=start, end=end)
-    fname = os.path.join(os.path.dirname(__file__), args["events"])
     with open(args['events']) as f:
         events = [json.loads(e) for e in f]
-    event_parser.parse_events(events)
+    event_parser.execute_events(events)
     event_parser.write_balances(
         args["token"], interval=args["log_interval"], filepath=args["output"])
 

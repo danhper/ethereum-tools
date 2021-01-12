@@ -39,14 +39,14 @@ def dummy_addresses():
 
 def test_handle_transfer_event(addresses):
     transfer_event_parser = TransferEventParser(addresses)
-    transfer_event_parser.set_quantity_key(mock_event)
+    transfer_event_parser.set_keys(mock_event)
     transfer_event_parser.handle_transfer_event(mock_event)
     assert transfer_event_parser.balances["0x0001FB050Fe7312791bF6475b96569D83F695C9f"][10478438] == 174003773318124380
 
 
-def test_parse_events(addresses, events):
+def test_execute_events(addresses, events):
     transfer_event_parser = TransferEventParser(addresses)
-    transfer_event_parser.parse_events(events)
+    transfer_event_parser.execute_events(events)
     assert transfer_event_parser.balances[
         "0x0001FB050Fe7312791bF6475b96569D83F695C9f"][10478649] == 9995796750644777900207
     assert transfer_event_parser.balances["0x28b88cfD875C883cDb61938C97B8d1baabf31c88"][10478826] == 90896908769421890
