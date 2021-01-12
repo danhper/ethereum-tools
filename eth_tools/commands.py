@@ -67,8 +67,8 @@ def get_balances(args: dict):
     """
     with open(args['addresses']) as f:
         addresses = json.load(f)
-    start = args['start_block'] if 'start_block' in args.keys() else None
-    end = args['end_block'] if 'end_block' in args.keys() else None
+    start = args.get('start_block')
+    end = args.get('end_block')
     event_parser = TransferEventParser(
         addresses, start=start, end=end)
     with open(args['events']) as f:
