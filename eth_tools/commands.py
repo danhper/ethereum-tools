@@ -49,8 +49,16 @@ def create_web3(uri: str):
 @uses_web3
 def fetch_blocks(args: dict, web3: Web3):
     """Fetches blocks and stores them in the file given in arguments"""
+    blocks = None
+    if args["blocks"]:
+        with open(args["blocks"]) as f:
+            blocks = list(map(int, f))
     block_iterator = BlockIterator(
-        web3, args["start_block"], args["end_block"], log_interval=args["log_interval"]
+        web3,
+        start_block=args["start_block"],
+        end_block=args["end_block"],
+        blocks=blocks,
+        log_interval=args["log_interval"],
     )
     fields = args["fields"]
     with smart_open(args["output"], "w") as f:
@@ -65,17 +73,17 @@ def get_balances(args: dict):
     """
     Parses 'transfer' events of an ERC20 contract to compute balances
     """
-    with open(args['addresses']) as f:
+    with open(args["addresses"]) as f:
         addresses = json.load(f)
-    start = args.get('start_block')
-    end = args.get('end_block')
-    event_parser = TransferEventParser(
-        addresses, start=start, end=end)
-    with open(args['events']) as f:
+    start = args.get("start_block")
+    end = args.get("end_block")
+    event_parser = TransferEventParser(addresses, start=start, end=end)
+    with open(args["events"]) as f:
         events = [json.loads(e) for e in f]
     event_parser.execute_events(events)
     event_parser.write_balances(
-        args["token"], interval=args["log_interval"], filepath=args["output"])
+        args["token"], interval=args["log_interval"], filepath=args["output"]
+    )
 
 
 @uses_etherscan
@@ -159,8 +167,7 @@ def bulk_fetch_events(args: dict, web3: Web3):
     fetcher = EventFetcher(web3)
     with smart_open(args["config"]) as f:
         raw_tasks = json.load(f)
-    tasks = [FetchTask.from_dict(raw_task, args["abis"])
-             for raw_task in raw_tasks]
+    tasks = [FetchTask.from_dict(raw_task, args["abis"]) for raw_task in raw_tasks]
     fetcher.fetch_all_events(tasks, args["output"])
 
 
