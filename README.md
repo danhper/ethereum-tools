@@ -22,7 +22,7 @@ eth-tools fetch-blocks -s 10000000 -e 10000999 -o blocks.csv.gz
 ### Fetching events
 
 ```
-eth-tools fetch-events -a 0x6b175474e89094c44da98b954eedeac495271d0f --abi /path/to/abi.json -s 10000000 -e 10000999 -o events.jsonl.gz
+eth-tools fetch-events 0x6b175474e89094c44da98b954eedeac495271d0f --abi /path/to/abi.json -s 10000000 -e 10000999 -o events.jsonl.gz
 ```
 
 ## Library usage
