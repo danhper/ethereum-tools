@@ -1,5 +1,6 @@
 import csv
 import json
+from os import path
 import sys
 import json
 import os
@@ -11,7 +12,7 @@ from eth_typing import Address
 from web3 import Web3
 from web3.providers.auto import load_provider_from_uri
 
-from eth_tools import constants
+from eth_tools import abi_fetcher, constants
 from eth_tools.block_iterator import BlockIterator
 from eth_tools.contract_caller import ContractCaller
 from eth_tools.event_fetcher import EventFetcher, FetchTask
@@ -87,7 +88,7 @@ def get_balances(args: dict):
 
 
 @uses_etherscan
-def fetch_address_transactions(args: dict, etherscan_key: Web3):
+def fetch_address_transactions(args: dict, etherscan_key: str):
     fetcher = TransactionsFetcher(etherscan_api_key=etherscan_key)
     internal = args["internal"]
     if internal:
@@ -160,6 +161,18 @@ def fetch_events(args: dict, web3: Web3):
     fetcher = EventFetcher(web3)
     task = FetchTask.from_dict(args)
     fetcher.fetch_and_persist_events(task, args["output"])
+
+
+@uses_etherscan
+def fetch_abis(args: dict, etherscan_key: str):
+    with open(args["input"]) as f:
+        contracts = json.load(f)
+    abis = abi_fetcher.fetch_abis([c["address"] for c in contracts],
+                                  etherscan_api_key=etherscan_key)
+    for contract, abi in zip(contracts, abis):
+        with open(path.join(args["output"], contract["abi"]), "w") as f:
+            json.dump(abi, f, indent=4)
+
 
 
 @uses_web3

@@ -203,6 +203,20 @@ get_balances_event_parser.add_argument(
 )
 
 
+fetch_abis_parser = subparsers.add_parser(
+    "fetch-abis",
+    help="fetches ABI information of contracts from Etherscan",
+)
+add_etherscan_api_key(fetch_abis_parser)
+fetch_abis_parser.add_argument(
+    "input", help="file containing the contracts to fetch"
+)
+fetch_abis_parser.add_argument(
+    "-o", "--output", required=True, help="output directory"
+)
+
+
+
 def run():
     args = vars(parser.parse_args())
     if not args["command"]:
