@@ -1,3 +1,4 @@
+from eth_tools.caching import cache
 from typing import Iterable, List, Optional
 
 import requests
@@ -5,6 +6,7 @@ import requests
 ABI_BASE_URL = "http://api.etherscan.io/api?module=contract&action=getabi&address={address}&format=raw"
 
 
+@cache(ttl=-1, min_disk_time=0)
 def fetch_abi(address: str, etherscan_api_key: Optional[str] = None) -> dict:
     url = ABI_BASE_URL.format(address=address)
     if etherscan_api_key:

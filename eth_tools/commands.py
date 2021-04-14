@@ -1,11 +1,9 @@
 import csv
 import json
-from os import path
 import sys
-import json
-import os
 from contextlib import contextmanager
 from functools import wraps
+from os import path
 from typing import IO, Iterator
 
 from eth_typing import Address
@@ -136,8 +134,11 @@ def fetch_transactions(args: dict, web3: Web3):
 
 @uses_web3
 def call_contract(args: dict, web3: Web3):
-    with open(args["abi"]) as f:
-        abi = json.load(f)
+    if args["abi"]:
+        with open(args["abi"]) as f:
+            abi = json.load(f)
+    else:
+        abi = abi_fetcher.fetch_abi(args["address"])
     address: Address = web3.toChecksumAddress(args["address"])
     contract = web3.eth.contract(abi=abi, address=address)
     contract_caller = ContractCaller(contract)
