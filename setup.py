@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ethereum-tools",
-    version="0.1.4",
+    version="0.1.5",
     packages=find_packages(exclude="tests"),
     description="High-level tools and library to interact with Ethereum",
     long_description=open("README.md").read(),
