@@ -11,7 +11,6 @@ def smart_open(
     newline=None,
     closefd=True,
     opener=None,
-    ignore_ext=False,
     transport_params=None,
 ) -> IO[str]:
     return cast(
@@ -25,7 +24,6 @@ def smart_open(
             newline=newline,
             closefd=closefd,
             opener=opener,
-            ignore_ext=ignore_ext,
             transport_params=transport_params,
         ),
     )
